@@ -151,12 +151,8 @@ weather-backend-service/
 
 
 ## Author
-```Manideep Mukhi```
+***Manideep Mukhi***
 
 
 ---
-
-
-
-**Manideep Mukhi**
 
