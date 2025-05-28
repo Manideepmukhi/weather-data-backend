@@ -1,133 +1,157 @@
-# Historical Weather Data Backend Service
 
-This backend service fetches historical weather data from the [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api), stores the data as JSON files (simulating cloud storage), and provides endpoints to list and retrieve those files.
+# Weather Data Storage Service (Flask + Google Cloud Platform)
 
- **Note**: Deployment to Google Cloud Run was skipped due to budget constraints. However, the application is fully functional and has been tested locally using Docker and Postman.
-
----
-
-## Tech Stack
-
-- **Backend Framework**: Python + Flask  
-- **Cloud Integration**: Simulated using local file storage (no billing needed)  
-- **Containerization**: Docker  
-- **Testing Tool**: Postman  
+This is a Flask-based backend service that fetches historical weather data from the Open-Meteo API and stores it in Google Cloud Storage. The project is deployed using Google Cloud Run.
 
 ---
 
-##  Features
+## Live Demo
 
-- Fetches historical weather data using Open-Meteo API
-- Stores data as JSON files with a structured naming convention
-- Lists stored JSON files
-- Retrieves the content of a specific stored file
+**URL:** [https://weather-service-266316618620.us-central1.run.app](https://weather-service-266316618620.us-central1.run.app)
 
 ---
 
-## API Endpoints
+## Setup Instructions
 
-### 1. `POST /store-weather-data`
+### 1. Clone the repository
 
-**Purpose**: Fetch weather data and store it as a JSON file
+```bash
+git clone https://github.com/your-username/weather-data-service.git
+cd weather-data-service
+````
 
-- **Method**: `POST`
-- **URL**: `http://localhost:5000/store-weather-data`
-- **Request Body**:
+### 2. Create a virtual environment and install dependencies
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Set Environment Variables
+
+```bash
+export GCS_BUCKET_NAME=your-gcs-bucket-name
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your-service-account-key.json
+```
+
+### 4. Run the Flask server locally
+
+```bash
+python app.py
+```
+
+---
+
+## Deploy to Google Cloud Run
+
+1. **Enable required services:**
+
+```bash
+gcloud services enable run cloudbuild.googleapis.com
+```
+
+2. **Deploy the service:**
+
+```bash
+gcloud run deploy weather-service \
+  --source . \
+  --region us-central1 \
+  --platform managed \
+  --allow-unauthenticated \
+  --set-env-vars GCS_BUCKET_NAME=your-gcs-bucket-name
+```
+
+---
+
+## Folder Structure
+```
+weather-backend-service/
+│
+├── main.py               # Flask app with all routes and Handles Open-Meteo API integration
+├── Dockerfile            # Docker container definition
+├── requirements.txt      # Python dependencies
+└── README.md             # Project documentation (this file)
+```
+
+## API Documentation
+
+### 1. `/store-weather-data` — **POST**
+
+* **Description:** Fetches weather data and stores it in Google Cloud Storage.
+* **Endpoint:** `/store-weather-data`
+* **Method:** `POST`
+* **Request Body (JSON):**
+
 ```json
 {
-  "latitude": 52.54833,
-  "longitude": 13.407822,
-  "start_date": "2023-05-01",
-  "end_date": "2023-05-02"
+  "latitude": 13.08,
+  "longitude": 80.27,
+  "start_date": "2024-01-01",
+  "end_date": "2024-01-07"
 }
+```
 
+* **Success Response:**
 
-Response:
-
-json
-Copy
-Edit
+```json
 {
-  "message": "Weather data stored successfully",
-  "file_name": "weather_52.54833_13.407822_2023-05-01_2023-05-02.json"
+  "message": "Data stored successfully",
+  "file_name": "weather_13_08_80_27_2024-01-01_to_2024-01-07.json"
 }
-2. GET /list-weather-files
-Purpose: List all JSON files stored in the weather_data/ directory.
+```
 
-Method: GET
+* **Error Codes:**
 
-URL: http://localhost:5000/list-weather-files
+  * `400`: Invalid or missing inputs
+  * `502`: Open-Meteo API failure
+  * `500`: Internal server error
 
-Response:
+---
 
-json
-Copy
-Edit
+### 2. `/list-weather-files` — **GET**
+
+* **Description:** Lists all weather files stored in the bucket.
+* **Endpoint:** `/list-weather-files`
+* **Method:** `GET`
+* **Response:**
+
+```json
 {
   "files": [
-    "weather_52.54833_13.407822_2023-05-01_2023-05-02.json",
-    "weather_40.7128_74.006_2022-01-01_2022-01-03.json"
+    "weather_13_08_80_27_2024-01-01_to_2024-01-07.json"
   ]
 }
-3. GET /weather-file-content/<file_name>
-Purpose: Retrieve the contents of a specific weather JSON file.
+```
 
-Method: GET
+---
 
-URL: http://localhost:5000/weather-file-content/weather_52.54833_13.407822_2023-05-01_2023-05-02.json
+### 3. `/weather-file-content/<file_name>` — **GET**
 
-Response:
+* **Description:** Returns the content of a specific file.
+* **Endpoint Example:** `/weather-file-content/weather_13_08_80_27_2024-01-01_to_2024-01-07.json`
+* **Method:** `GET`
+* **Success Response:** JSON weather data
+* **Error Code:** `404` if file not found, `500` for other errors
 
-json
-Copy
-Edit
-{
-  "latitude": 52.54833,
-  "longitude": 13.407822,
-  "daily": {
-    "temperature_2m_max": [...],
-    "temperature_2m_min": [...],
-    ...
-  }
- Run Locally with Docker
- Prerequisites
-Docker installed
- Build Docker Image
-bash
-Copy
-Edit
-docker build -t weather-service .
- Run the App
-bash
-Copy
-Edit
-docker run -p 5000:5000 weather-service
-The app will now be available at:
- http://localhost:5000
+---
 
- File Storage
-All weather JSON files are stored in the weather_data/ directory inside your project root. This simulates Google Cloud Storage.
+### 4. `/` — **GET**
 
- Testing the API
-You can use Postman or curl to test the endpoints locally.
+* **Description:** Health check endpoint
+* **Response:** `Weather Data API is running.`
 
-Example with curl:
+---
 
-bash
-Copy
-Edit
-curl -X POST http://localhost:5000/store-weather-data \
--H "Content-Type: application/json" \
--d '{"latitude":52.54833,"longitude":13.407822,"start_date":"2023-05-01","end_date":"2023-05-02"}'
- Notes
-Make sure the weather_data/ directory exists before running.
+## Environment Variables
 
-The Open-Meteo API is free and does not require an API key.
+| Variable                         | Description                                       |
+| -------------------------------- | ------------------------------------------------- |
+| `weather-data-bucket-manideepmukhi`                | Name of the Google Cloud Storage bucket           |
 
-Full error handling is implemented for invalid inputs and file not found errors.
+---
 
- Author
-Manideep Mukhi
-(Java Backend Developer | Spring Boot | Python Enthusiast | Cloud Explorer)
+## Author
 
+**Manideep Mukhi**
 
