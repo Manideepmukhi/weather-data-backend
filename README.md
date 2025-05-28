@@ -149,9 +149,14 @@ weather-backend-service/
 | -------------------------------- | ------------------------------------------------- |
 | `weather-data-bucket-manideepmukhi`                | Name of the Google Cloud Storage bucket           |
 
----
 
 ## Author
+```Manideep Mukhi```
+
+
+---
+
+
 
 **Manideep Mukhi**
 
