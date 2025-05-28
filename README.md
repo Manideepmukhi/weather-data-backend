@@ -71,7 +71,7 @@ weather-backend-service/
 ├── main.py               # Flask app with all routes and Handles Open-Meteo API integration
 ├── Dockerfile            # Docker container definition
 ├── requirements.txt      # Python dependencies
-└── README.md             # Project documentation (this file)
+└── README.md             # Project documentation
 ```
 
 ## API Documentation
